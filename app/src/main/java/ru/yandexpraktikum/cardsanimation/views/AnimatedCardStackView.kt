@@ -5,6 +5,8 @@ import android.util.AttributeSet
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.widget.FrameLayout
+import ru.yandexpraktikum.cardsanimation.AnimationStep
+import ru.yandexpraktikum.cardsanimation.Constants
 import ru.yandexpraktikum.cardsanimation.model.CardData
 import kotlin.math.abs
 
@@ -18,10 +20,6 @@ class AnimatedCardStackView @JvmOverloads constructor(
     private val cards = mutableListOf<AnimatedCardView>()
     private var isRotated = false
 
-    private var verticalDragOffset = 0f
-    private var horizontalDragOffset = 0f
-
-    private val swipeThreshold = 100f
 
     fun setCards(newCardDataList: List<CardData>) {
         cardDataList = newCardDataList
@@ -82,19 +80,19 @@ class AnimatedCardStackView @JvmOverloads constructor(
     }
 
     private var isAnimating = false
-    private var animationStep = 0
+    private var animationStep: AnimationStep = AnimationStep.NONE
 
     private fun startCardSwapAnimation(bottomCard: AnimatedCardView) {
         if (isAnimating) return
         isAnimating = true
-        animationStep = 1
+        animationStep = AnimationStep.MOVE_RIGHT
 
         bottomCard.moveCardRight {
-            animationStep = 2
+            animationStep = AnimationStep.MOVE_UP
 
             bottomCard.bringAboveAll()
             bottomCard.moveCardToTop {
-                animationStep = 3
+                animationStep = AnimationStep.RETURN
 
                 bottomCard.adjustToFinalPosition(
                     finalRotation = 0f,
@@ -103,7 +101,7 @@ class AnimatedCardStackView @JvmOverloads constructor(
                     cardDataList = reorderCards(cardDataList)
                     setupCards()
                     isAnimating = false
-                    animationStep = 0
+                    animationStep = AnimationStep.NONE
                 }
             }
         }
@@ -127,8 +125,8 @@ class AnimatedCardStackView @JvmOverloads constructor(
                 distanceX: Float,
                 distanceY: Float
             ): Boolean {
-                horizontalDragOffset -= distanceX
-                verticalDragOffset -= distanceY
+                Constants.HORIZONTAL_DRAG_OFFSET -= distanceX
+                Constants.VERTICAL_DRAG_OFFSET -= distanceY
                 return true
             }
 
@@ -157,18 +155,18 @@ class AnimatedCardStackView @JvmOverloads constructor(
             resetOffsets(); return
         }
 
-        val absX = kotlin.math.abs(horizontalDragOffset)
-        val absY = kotlin.math.abs(verticalDragOffset)
+        val absX = kotlin.math.abs(Constants.HORIZONTAL_DRAG_OFFSET )
+        val absY = kotlin.math.abs(Constants.VERTICAL_DRAG_OFFSET)
 
         val verticalDominant = absY > absX
         val horizontalDominant = absX > absY
 
         when {
-            verticalDominant && absY > swipeThreshold -> {
-                handleVerticalSwipe(verticalDragOffset)
+            verticalDominant && absY > Constants.SWIPE_THRESHOLD -> {
+                handleVerticalSwipe(Constants.VERTICAL_DRAG_OFFSET)
             }
 
-            horizontalDominant && absX > swipeThreshold -> {
+            horizontalDominant && absX > Constants.SWIPE_THRESHOLD -> {
                 handleHorizontalSwipe()
             }
         }
@@ -176,8 +174,8 @@ class AnimatedCardStackView @JvmOverloads constructor(
     }
 
     private fun resetOffsets() {
-        verticalDragOffset = 0f
-        horizontalDragOffset = 0f
+        Constants.VERTICAL_DRAG_OFFSET = 0f
+        Constants.HORIZONTAL_DRAG_OFFSET  = 0f
     }
 
     // TODO: [Задание 3] Добавьте обработку вертикальных свайпов (вверх/вниз)
@@ -198,3 +196,4 @@ class AnimatedCardStackView @JvmOverloads constructor(
 
 
 }
+
